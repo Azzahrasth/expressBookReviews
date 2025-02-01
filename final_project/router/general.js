@@ -98,17 +98,19 @@ public_users.get('/review/:isbn',function (req, res) {
 });
 
 // TASK 10 Get the book list
-// Version 1: Using Promises
-public_users.get('/promise', (req, res) => {
-    axios.get('https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/')
-        .then(response => res.send(response.data))
-        .catch(error => res.status(500).send("Error fetching book list"));
-});
 
-// Version 2: Using Async/Await
+// Version: Using Async/Await
+const getAllBooks = async () => {
+    try {
+        return await axios.get('http://localhost:5000/');
+    } catch (error) {
+        throw new Error("Failed to fetch books from server");
+    }
+};
+
 public_users.get('/async', async (req, res) => {
     try {
-        const response = await axios.get('https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/');
+        const response = await getAllBooks();
         res.send(response.data);
     } catch (error) {
         res.status(500).send("Error fetching book list");
@@ -116,63 +118,99 @@ public_users.get('/async', async (req, res) => {
 });
 
 // TASK 11 Get book details based on ISBN
-// Version 1: Using Promises
-public_users.get('/promise/isbn/:isbn', (req, res) => {
-    const isbn = req.params.isbn;
-    axios.get(`https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/isbn/${isbn}`)
-        .then(response => res.send(response.data))
-        .catch(error => res.status(500).send("Error fetching book details"));
-});
 
-// Version 2: Using Async/Await
-public_users.get('/async/isbn/:isbn', async (req, res) => {
+// Version: Using promise
+public_users.get('/promise/isbn/:isbn', async (req, res) => {
     const isbn = req.params.isbn;
-    try {
-        const response = await axios.get(`https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/isbn/${isbn}`);
-        res.send(response.data);
-    } catch (error) {
-        res.status(500).send("Error fetching book details");
-    }
+
+    const book_by_isbn = new Promise((resolve, reject) => {
+        if (books[isbn]) {
+            resolve(books[isbn]);
+        } else {
+            reject("ISBN not found");
+        }
+    });
+
+    book_by_isbn
+        .then(book => res.send(book))
+        .catch(error => res.status(404).send(error));
 });
 
 // TASK 12 Get book details based on Author
-// Version 1: Using Promises
+// Version: Using Promises
 public_users.get('/promise/author/:author', (req, res) => {
     const author = req.params.author;
-    axios.get(`https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/author/${author}`)
-        .then(response => res.send(response.data))
-        .catch(error => res.status(500).send("Error fetching books by author"));
-});
 
-// Version 2: Using Async/Await
-public_users.get('/async/author/:author', async (req, res) => {
-    const author = req.params.author;
-    try {
-        const response = await axios.get(`https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/author/${author}`);
-        res.send(response.data);
-    } catch (error) {
-        res.status(500).send("Error fetching books by author");
+    const book_by_author = new Promise((resolve, reject) => {
+    
+    // Create an array to store filtered books
+    const result = [];
+
+    // Get all ISBNs (keys) from the 'books' object
+    const isbns = Object.keys(books);
+
+    // Iterate through each ISBN and check if the author matches
+    isbns.forEach(isbn => {
+        if (books[isbn].author === author) {
+            // Create a new object with only isbn, title, and reviews
+            result.push({
+                isbn: isbn,
+                title: books[isbn].title,
+                reviews: books[isbn].reviews
+            });
+        }
+    });
+
+    if(result.length > 0){
+        // Send the result with proper indentation
+        resolve(res.send(JSON.stringify({ booksbyauthor: result }, null, 4)));
+    }else{
+        reject("Author not found");
     }
+    });
+
+    book_by_author
+        .then(book => res.send(book))
+        .catch(error => res.status(404).send(error));
 });
 
 // TASK 13 Get book details based on Title
-// Version 1: Using Promises
+// Version: Using Promises
 public_users.get('/promise/title/:title', (req, res) => {
     const title = req.params.title;
-    axios.get(`https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/title/${title}`)
-        .then(response => res.send(response.data))
-        .catch(error => res.status(500).send("Error fetching books by title"));
+
+    const book_by_title = new Promise((resolve, reject) => {
+    
+    // Create an array to store filtered books
+    const result = [];
+
+    // Get all ISBNs (keys) from the 'books' object
+    const isbns = Object.keys(books);
+
+    // Iterate through each ISBN and check if the title matches
+    isbns.forEach(isbn => {
+        if (books[isbn].title === title) {
+            // Create a new object with only isbn, title, and reviews
+            result.push({
+                isbn: isbn,
+                author: books[isbn].author,
+                reviews: books[isbn].reviews
+            });
+        }
+    });
+
+    if(result.length > 0){
+        // Send the result with proper indentation
+        resolve(res.send(JSON.stringify({ booksbytitle: result }, null, 4)));
+    }else{
+        reject("title not found");
+    }
+    });
+
+    book_by_title
+        .then(book => res.send(book))
+        .catch(error => res.status(404).send(error));
 });
 
-// Version 2: Using Async/Await
-public_users.get('/async/title/:title', async (req, res) => {
-    const title = req.params.title;
-    try {
-        const response = await axios.get(`https://sitihadjaraz-5000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/title/${title}`);
-        res.send(response.data);
-    } catch (error) {
-        res.status(500).send("Error fetching books by title");
-    }
-});
 
 module.exports.general = public_users;
