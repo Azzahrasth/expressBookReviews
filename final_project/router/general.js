@@ -15,7 +15,7 @@ public_users.post("/register", (req,res) => {
         if (!isValid(username)) {
             // Add the new user to the users array
             users.push({"username": username, "password": password});
-            return res.status(200).json({message: "User successfully registered. Now you can login"});
+            return res.status(200).send("User successfully registered. Now you can login");
         } else {
             return res.status(404).json({message: "User already exists!"});
         }
@@ -27,7 +27,7 @@ public_users.post("/register", (req,res) => {
 // TASK 1 Get the book list available in the shop
 public_users.get('/',function (req, res) {
    // Send JSON response with formatted books data
-    res.send(JSON.stringify(books,null,4));
+   res.send(JSON.stringify({ books: books }, null, 4)); 
 });
 
 // TASK 2 Get book details based on ISBN
@@ -38,11 +38,11 @@ public_users.get('/isbn/:isbn',function (req, res) {
  });
   
 // TASK 3 Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-    // Retrieve the author parameter from the request URL and send the corresponding books details
+public_users.get('/author/:author', function (req, res) {
     const author = req.params.author;
-    // Create an object to store filtered books
-    const result = {};
+    
+    // Create an array to store filtered books
+    const result = [];
 
     // Get all ISBNs (keys) from the 'books' object
     const isbns = Object.keys(books);
@@ -50,20 +50,26 @@ public_users.get('/author/:author',function (req, res) {
     // Iterate through each ISBN and check if the author matches
     isbns.forEach(isbn => {
         if (books[isbn].author === author) {
-            result[isbn] = books[isbn]; 
+            // Create a new object with only isbn, title, and reviews
+            result.push({
+                isbn: isbn,
+                title: books[isbn].title,
+                reviews: books[isbn].reviews
+            });
         }
     });
 
-    res.send(JSON.stringify(result, null, 4));
+    // Send the result with proper indentation
+    res.send(JSON.stringify({ booksbyauthor: result }, null, 4));
 });
+
 
 // TASK 4 Get all books based on title
 public_users.get('/title/:title',function (req, res) {
-  // Retrieve the title parameter from the request URL and send the corresponding books details
-  const title = req.params.title;
- 
-    // Create an object to store filtered books
-    const result = {};
+    const title = req.params.title;
+    
+    // Create an array to store filtered books
+    const result = [];
 
     // Get all ISBNs (keys) from the 'books' object
     const isbns = Object.keys(books);
@@ -71,11 +77,17 @@ public_users.get('/title/:title',function (req, res) {
     // Iterate through each ISBN and check if the title matches
     isbns.forEach(isbn => {
         if (books[isbn].title === title) {
-            result[isbn] = books[isbn]; 
+            // Create a new object with only isbn, title, and reviews
+            result.push({
+                isbn: isbn,
+                author: books[isbn].author,
+                reviews: books[isbn].reviews
+            });
         }
     });
 
-    res.send(JSON.stringify(result, null, 4));
+    // Send the result with proper indentation
+    res.send(JSON.stringify({ booksbytitle: result }, null, 4));
 });
 
 // TASK 5 Get book review
